@@ -205,9 +205,9 @@ router.post('/mark-attendance', verifyToken, authorizeRoles('student'), async (r
       [sessionId]
     );
 
-    if (sessionResult.rows.length === 0) {
-      return res.status(400).json({ error: "Invalid or expired session" });
-    }
+    // if (sessionResult.rows.length === 0) {
+    //   return res.status(400).json({ error: "Invalid or expired session" });
+    // }
 
     const { classroom_id } = sessionResult.rows[0];
 
@@ -219,20 +219,20 @@ router.post('/mark-attendance', verifyToken, authorizeRoles('student'), async (r
 
     const classroom = classroomResult.rows[0];
 
-    if (classroom.canvas_course_id) {
-      const canvasRoster = await canvasApi.get(
-        `/courses/${classroom.canvas_course_id}/enrollments`,
-        { params: { type: ['StudentEnrollment'] } }
-      );
+    // if (classroom.canvas_course_id) {
+    //   const canvasRoster = await canvasApi.get(
+    //     `/courses/${classroom.canvas_course_id}/enrollments`,
+    //     { params: { type: ['StudentEnrollment'] } }
+    //   );
 
-      const canvasMatch = canvasRoster.data.some(entry =>
-        entry.user.login_id?.toLowerCase() === req.user.email.toLowerCase()
-      );
+    //   const canvasMatch = canvasRoster.data.some(entry =>
+    //     entry.user.login_id?.toLowerCase() === req.user.email.toLowerCase()
+    //   );
 
-      if (!canvasMatch) {
-        return res.status(403).json({ error: "You are not enrolled in this Canvas course" });
-      }
-    }
+    //   if (!canvasMatch) {
+    //     return res.status(403).json({ error: "You are not enrolled in this Canvas course" });
+    //   }
+    // }
     // 3. Auto-enroll if not already
     await pool.query(
       `INSERT INTO enrollments (student_id, classroom_id)
@@ -312,7 +312,7 @@ router.post('/mark-attendance', verifyToken, authorizeRoles('student'), async (r
 });
 
 // STUDENT ROUTES [get all classes of that student]
-router.get( "/my-classes", verifyToken, authorizeRoles("student"), async (req, res) => {
+router.get("/my-classes", verifyToken, authorizeRoles("student"), async (req, res) => {
   try {
     const studentId = req.user?.id;
 
@@ -320,7 +320,7 @@ router.get( "/my-classes", verifyToken, authorizeRoles("student"), async (req, r
       return res.status(401).json({ error: "Unauthorized: Missing user ID" });
     }
 
-    const query = 
+    const query =
       `SELECT c.id, c.class_name, c.start_date, c.end_date, tb.start_time, tb.end_time
       FROM enrollments e
       JOIN classrooms c ON e.classroom_id = c.id
@@ -331,7 +331,7 @@ router.get( "/my-classes", verifyToken, authorizeRoles("student"), async (req, r
     const { rows } = await pool.query(query, [studentId]);
 
     res.json({ classes: rows });
-  } 
+  }
   catch (err) {
     console.error("Error fetching student's classes:", err);
     res.status(500).json({ error: "Internal server error" });
