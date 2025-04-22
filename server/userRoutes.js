@@ -4,6 +4,7 @@ const pool = require("./db/db");
 const canvasApi = require('./canvasApi');
 
 const { verifyToken, authorizeRoles } = require("./authMiddleware");
+const session = require("express-session");
 
 const router = express.Router();
 
@@ -165,6 +166,7 @@ router.post(
       const expiresAt = new Date(createdAt.getTime() + 90 * 60 * 1000); // 90 mins later
 
       const qrData = `${process.env.URL}/attendance?session=${sessionId}`;
+      console.log(qrData);
       const qrImage = await QRCode.toDataURL(qrData);
 
 
@@ -196,8 +198,10 @@ router.post('/mark-attendance', verifyToken, authorizeRoles('student'), async (r
   try {
     const { sessionId } = req.body;
     const studentId = req.user.id;
-
     if (!sessionId) return res.status(400).json({ error: "No session ID provided" });
+
+
+    console.log(sessionId);
 
     // Ensure session exists and is valid and not expired.
     const sessionResult = await pool.query(
